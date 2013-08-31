@@ -2,12 +2,14 @@ package com.udb.modulo02.media.player;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
 public class Mp3List extends ActionBarActivity {
-    private String path = "/";
+    private String path = Environment
+                    .getExternalStorageDirectory().getAbsolutePath();
 	private int ACTIVITY_LIST_RESULT = 10;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
