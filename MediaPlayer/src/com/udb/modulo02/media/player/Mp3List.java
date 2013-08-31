@@ -10,11 +10,16 @@ import android.view.MenuItem;
 public class Mp3List extends ActionBarActivity {
     private String path = Environment
                     .getExternalStorageDirectory().getAbsolutePath();
+    private String currentPath;
 	private int ACTIVITY_LIST_RESULT = 10;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_mp3_list);
+		if(savedInstanceState != null) {
+			currentPath = savedInstanceState.getString("current");
+			loadMusic();
+		}
 	}
 
 	@Override
@@ -43,17 +48,43 @@ public class Mp3List extends ActionBarActivity {
 	                                    , Intent data) {
 	    if(requestCode == ACTIVITY_LIST_RESULT) {
 	        if(resultCode == RESULT_OK) {
-	            path = data.getExtras().getString("rootDirectory");
+	        	currentPath = data.getExtras().getString("rootDirectory");
 	            loadMusic();
 	        }
 	    }
 	}
 	
 	private void loadMusic() {
-	    ListMusicFragment f = (ListMusicFragment) 
-                getSupportFragmentManager()
-                                    .findFragmentById(R.id.fragment1);
-        f.loadMp3(path);
+		if(currentPath != null 
+				&& !currentPath.trim().equals("")) {
+		    ListMusicFragment f = (ListMusicFragment) 
+	                getSupportFragmentManager()
+	                                    .findFragmentById(R.id.fragment1);
+	        f.loadMp3(currentPath);
+		}
+	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putString("current", currentPath);
+	}
+	
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		currentPath = savedInstanceState.getString("current");
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		loadMusic();
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
 	}
 
     private void openActivityList() {

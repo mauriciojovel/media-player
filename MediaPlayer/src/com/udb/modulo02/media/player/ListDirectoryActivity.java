@@ -47,16 +47,28 @@ public class ListDirectoryActivity extends ActionBarActivity {
 			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
 			//
 			//NavUtils.navigateUpFromSameTask(this);
-		    setResult(RESULT_CANCELED);
-		    finish();
+			ListDirectoryFragment d = (ListDirectoryFragment) 
+	           getSupportFragmentManager().findFragmentById(R.id.fragment1);
+		    if(d != null) {
+		    	if(d.hashUp()) {
+		    		d.upDirectory();
+		    	} else {
+		    		setResult(RESULT_CANCELED);
+				    finish();
+		    	}
+		    } else {
+			    setResult(RESULT_CANCELED);
+			    finish();
+		    }
 			return true;
-		case R.id.action_up:
-		    ListDirectoryFragment d = (ListDirectoryFragment) 
+		/*case R.id.action_up:
+		    d = (ListDirectoryFragment) 
 		           getSupportFragmentManager().findFragmentById(R.id.fragment1);
 		    if(d != null) {
 		        d.upDirectory();
 		    }
 		    return true;
+		*/
 		case R.id.action_play_music:
 		    d = (ListDirectoryFragment) 
             getSupportFragmentManager().findFragmentById(R.id.fragment1);

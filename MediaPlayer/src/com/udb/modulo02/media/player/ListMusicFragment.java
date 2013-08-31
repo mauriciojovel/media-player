@@ -5,6 +5,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 public class ListMusicFragment extends ListFragment {
 	private List<File> paths;
 	private MediaPlayer mp;
+	private Integer currentSelected;
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -31,6 +33,13 @@ public class ListMusicFragment extends ListFragment {
 		paths = new ArrayList<File>();
 		setListAdapter(new ListMusicAdapter(getActivity()));
 		getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		if(savedInstanceState != null) {
+			currentSelected = savedInstanceState.getInt("current");
+			if(currentSelected.intValue() <= 0) {
+				currentSelected = null;
+			}
+		}
+		//getListView().setSelector(R.drawable.mp3_list_item_selector);
 	}
 	
 	@Override
@@ -38,6 +47,7 @@ public class ListMusicFragment extends ListFragment {
 	        Bundle savedInstanceState) {
 	    View root = inflater.inflate(R.layout.mp3_list_layaout
 	            , container, false);
+	    paths = new ArrayList<File>();
 	    return root;
 	}
 	
@@ -47,7 +57,7 @@ public class ListMusicFragment extends ListFragment {
             
             @Override
             public boolean accept(File dir, String filename) {
-                return filename.endsWith("mp3");
+                return filename.toLowerCase(Locale.ENGLISH).endsWith("mp3");
             }
         });
 	    if(files != null) {
@@ -59,6 +69,11 @@ public class ListMusicFragment extends ListFragment {
     	    if(files.length <= 0) {
     	        Toast.makeText(getActivity(), "No hay musica :("
     	                , Toast.LENGTH_SHORT).show();
+    	    }
+    	    
+    	    // verificamos que en la carga exista un valor ya cargado.
+    	    if(currentSelected!= null && currentSelected >= 0) {
+    	    	playSong(currentSelected);
     	    }
 	    } else {
 	        Toast.makeText(getActivity(), "No hay musica :("
@@ -110,6 +125,80 @@ public class ListMusicFragment extends ListFragment {
 		ImageButton stopBtn;
 	}
 	
+	@Override
+	public void onResume() {
+		super.onResume();
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putInt("current", currentSelected==null?-1:currentSelected);
+		if(mp != null) {
+			mp.release();
+			mp = null;
+		}
+	}
+	
+	public MediaPlayer getMediaPlayer() {
+        if(mp == null) {
+            mp = new MediaPlayer();
+        }else if(mp.isPlaying()) {
+        	mp.release();
+            mp = null;
+            mp = new MediaPlayer();
+        }
+        return mp;
+    }
+	
+	public void playSong(int position) {
+		ListView listView = ListMusicFragment.this.getListView();
+        MediaPlayer song = getMediaPlayer();
+        File pathSong = (File)getListAdapter().getItem(position);
+        listView.setItemChecked(position, true);
+        //listView.setSelection(position);
+        //listView.setSelected(true);
+        try {
+            song.setDataSource(pathSong.getAbsolutePath());
+            song.prepare();
+            song.start();
+            ListMusicFragment.this.currentSelected = position;
+        } catch (IllegalArgumentException e) {
+            Log.e("Mp3Player", "Error al ejecutar la cancion: " 
+                                    + pathSong.getAbsolutePath(), e);
+            Toast.makeText(getActivity()
+                    , "No se pudo ejecutar la cancion :("
+                    , Toast.LENGTH_LONG).show();
+        } catch (SecurityException e) {
+            Log.e("Mp3Player", "Error al ejecutar la cancion: " 
+                    + pathSong.getAbsolutePath(), e);
+            Toast.makeText(getActivity()
+                    , "No se pudo ejecutar la cancion :("
+                    , Toast.LENGTH_LONG).show();
+        } catch (IllegalStateException e) {
+            Log.e("Mp3Player", "Error al ejecutar la cancion: " 
+                    + pathSong.getAbsolutePath(), e);
+            Toast.makeText(getActivity()
+                    , "No se pudo ejecutar la cancion :("
+                    , Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Log.e("Mp3Player", "Error al ejecutar la cancion: " 
+                    + pathSong.getAbsolutePath(), e);
+            Toast.makeText(getActivity()
+                    , "No se pudo ejecutar la cancion :("
+                    , Toast.LENGTH_LONG).show();
+        }
+	}
+	
+	public void stopSong(int position) {
+		if(mp != null && mp.isPlaying()) {
+            ListView listView = ListMusicFragment.this.getListView();
+            mp.release();
+            mp = null;
+            listView.setItemChecked(position, false);
+        }
+	}
+	
 	class StopMediaButtonListener extends MediaButtonListener {
 
         public StopMediaButtonListener(int position, File pathSong) {
@@ -118,12 +207,7 @@ public class ListMusicFragment extends ListFragment {
         
         @Override
         public void onClick(View v) {
-            if(mp != null && mp.isPlaying()) {
-                ListView listView = ListMusicFragment.this.getListView();
-                mp.stop();
-                mp.release();
-                listView.setItemChecked(position, false);
-            }
+           stopSong(position);
         }
 	    
 	}
@@ -141,50 +225,10 @@ public class ListMusicFragment extends ListFragment {
 
         @Override
         public void onClick(View v) {
-            ListView listView = ListMusicFragment.this.getListView();
-            MediaPlayer song = getMediaPlayer();
-            listView.setItemChecked(position, true);
-            try {
-                song.setDataSource(pathSong.getAbsolutePath());
-                song.prepare();
-                song.start();
-            } catch (IllegalArgumentException e) {
-                Log.e("Mp3Player", "Error al ejecutar la cancion: " 
-                                        + pathSong.getAbsolutePath(), e);
-                Toast.makeText(getActivity()
-                        , "No se pudo ejecutar la cancion :("
-                        , Toast.LENGTH_LONG).show();
-            } catch (SecurityException e) {
-                Log.e("Mp3Player", "Error al ejecutar la cancion: " 
-                        + pathSong.getAbsolutePath(), e);
-                Toast.makeText(getActivity()
-                        , "No se pudo ejecutar la cancion :("
-                        , Toast.LENGTH_LONG).show();
-            } catch (IllegalStateException e) {
-                Log.e("Mp3Player", "Error al ejecutar la cancion: " 
-                        + pathSong.getAbsolutePath(), e);
-                Toast.makeText(getActivity()
-                        , "No se pudo ejecutar la cancion :("
-                        , Toast.LENGTH_LONG).show();
-            } catch (IOException e) {
-                Log.e("Mp3Player", "Error al ejecutar la cancion: " 
-                        + pathSong.getAbsolutePath(), e);
-                Toast.makeText(getActivity()
-                        , "No se pudo ejecutar la cancion :("
-                        , Toast.LENGTH_LONG).show();
-            }
+            playSong(position);
         }
         
-        public MediaPlayer getMediaPlayer() {
-            if(mp == null) {
-                mp = new MediaPlayer();
-            }
-            if(mp.isPlaying()) {
-                mp.stop();
-                mp.release();
-            }
-            return mp;
-        }
+        
 	    
 	}
 	

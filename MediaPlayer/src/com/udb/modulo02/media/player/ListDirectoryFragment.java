@@ -1,9 +1,10 @@
 package com.udb.modulo02.media.player;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Stack;
 
 import android.os.Bundle;
@@ -41,22 +42,30 @@ public class ListDirectoryFragment extends ListFragment {
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		historial.push(rootDirectory);
-		rootDirectory = files.get(position);
-		readDirectory(rootDirectory);
+		String swap = rootDirectory;
+		rootDirectory += "/"+files.get(position);
+		if(readDirectory(rootDirectory)) {
+			historial.push(swap);
+		}else {
+			rootDirectory = swap;
+		}
 		refreshList();
 	}
 
-	private void readDirectory(String string) {
+	private boolean readDirectory(String string) {
 		File f = new File(string);
+		boolean r = false;
 		if(f.isDirectory()) {
-    		File[] files = f.listFiles(new FilenameFilter() {
-                
-                @Override
-                public boolean accept(File dir, String filename) {
-                    return dir.isDirectory()||filename.endsWith("mp3");
-                }
-            });
+    		File[] files = f.listFiles(new FileFilter() {
+				
+				@Override
+				public boolean accept(File pathname) {
+					return !pathname.isHidden()&&(pathname.isDirectory()
+							||
+							(pathname.getName().toLowerCase(Locale.ENGLISH)
+									.endsWith("mp3")));
+				}
+			});
     		this.files.clear();
     		
     		if (files != null) {
@@ -65,7 +74,10 @@ public class ListDirectoryFragment extends ListFragment {
                     
                 }
             }
+    		r = true;
+    		getActivity().setTitle(string);
 		}
+		return r;
 	}
 	
 	public boolean hashUp() {
