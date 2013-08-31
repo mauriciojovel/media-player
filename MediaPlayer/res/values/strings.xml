@@ -9,5 +9,6 @@
     <string name="emptySong">Haz clic en la carpeta para seleccionar la musica.</string>
     <string name="play">Play</string>
     <string name="stop">Parar</string>
+    <string name="icon">Icon</string>
 
 </resources>

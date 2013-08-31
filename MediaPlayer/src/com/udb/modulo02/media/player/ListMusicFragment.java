@@ -26,6 +26,7 @@ public class ListMusicFragment extends ListFragment {
 	private List<File> paths;
 	private MediaPlayer mp;
 	private Integer currentSelected;
+	private int songPosition;
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -35,9 +36,12 @@ public class ListMusicFragment extends ListFragment {
 		getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 		if(savedInstanceState != null) {
 			currentSelected = savedInstanceState.getInt("current");
-			if(currentSelected.intValue() <= 0) {
+			if(currentSelected.intValue() < 0) {
 				currentSelected = null;
 			}
+			songPosition = savedInstanceState.getInt("positionSong", 0);
+		} else {
+			songPosition = 0;
 		}
 		//getListView().setSelector(R.drawable.mp3_list_item_selector);
 	}
@@ -135,6 +139,9 @@ public class ListMusicFragment extends ListFragment {
 		super.onSaveInstanceState(outState);
 		outState.putInt("current", currentSelected==null?-1:currentSelected);
 		if(mp != null) {
+			if(mp.isPlaying()) {
+				outState.putInt("positionSong", mp.getCurrentPosition());
+			}
 			mp.release();
 			mp = null;
 		}
@@ -161,6 +168,10 @@ public class ListMusicFragment extends ListFragment {
         try {
             song.setDataSource(pathSong.getAbsolutePath());
             song.prepare();
+            if(songPosition > 0) {
+            	// el mas uno es por el retraso al girar la pantalla
+            	song.seekTo(songPosition+1);
+            }
             song.start();
             ListMusicFragment.this.currentSelected = position;
         } catch (IllegalArgumentException e) {
@@ -191,12 +202,14 @@ public class ListMusicFragment extends ListFragment {
 	}
 	
 	public void stopSong(int position) {
-		if(mp != null && mp.isPlaying()) {
-            ListView listView = ListMusicFragment.this.getListView();
-            mp.release();
-            mp = null;
-            listView.setItemChecked(position, false);
-        }
+		if(position == currentSelected) {
+			if(mp != null && mp.isPlaying()) {
+	            ListView listView = ListMusicFragment.this.getListView();
+	            mp.release();
+	            mp = null;
+	            listView.setItemChecked(position, false);
+	        }
+		}
 	}
 	
 	class StopMediaButtonListener extends MediaButtonListener {
