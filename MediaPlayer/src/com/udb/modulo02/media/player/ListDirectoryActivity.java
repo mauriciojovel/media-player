@@ -1,9 +1,9 @@
 package com.udb.modulo02.media.player;
 
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,8 +46,27 @@ public class ListDirectoryActivity extends ActionBarActivity {
 			//
 			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
 			//
-			NavUtils.navigateUpFromSameTask(this);
+			//NavUtils.navigateUpFromSameTask(this);
+		    setResult(RESULT_CANCELED);
+		    finish();
 			return true;
+		case R.id.action_up:
+		    ListDirectoryFragment d = (ListDirectoryFragment) 
+		           getSupportFragmentManager().findFragmentById(R.id.fragment1);
+		    if(d != null) {
+		        d.upDirectory();
+		    }
+		    return true;
+		case R.id.action_play_music:
+		    d = (ListDirectoryFragment) 
+            getSupportFragmentManager().findFragmentById(R.id.fragment1);
+		    if(d != null) {
+    		    Intent data = new Intent();
+    		    data.putExtra("rootDirectory", d.getCurrentDirectory());
+    		    setResult(RESULT_OK, data);
+		    }
+		    finish();
+		    return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}

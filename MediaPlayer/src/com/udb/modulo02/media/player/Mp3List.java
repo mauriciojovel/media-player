@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class Mp3List extends ActionBarActivity {
+    private String path = "/";
 	private int ACTIVITY_LIST_RESULT = 10;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -35,10 +36,28 @@ public class Mp3List extends ActionBarActivity {
 		return r;
 	}
 
-	private void openActivityList() {
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode
+	                                    , Intent data) {
+	    if(requestCode == ACTIVITY_LIST_RESULT) {
+	        if(resultCode == RESULT_OK) {
+	            path = data.getExtras().getString("rootDirectory");
+	            loadMusic();
+	        }
+	    }
+	}
+	
+	private void loadMusic() {
+	    ListMusicFragment f = (ListMusicFragment) 
+                getSupportFragmentManager()
+                                    .findFragmentById(R.id.fragment1);
+        f.loadMp3(path);
+	}
+
+    private void openActivityList() {
 		Intent i = new Intent();
 		i.setClass(this, ListDirectoryActivity.class);
-		i.putExtra("rootDirectory", "/");
+		i.putExtra("rootDirectory", path);
 		startActivityForResult(i, ACTIVITY_LIST_RESULT);
 	}
 }
